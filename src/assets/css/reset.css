@@ -1,0 +1,5 @@
+@charset "utf-8";
+
+.pointer { cursor:pointer }
+button { cursor:pointer }
+table {width: 100%; border-collapse: collapse;table-layout: fixed;}

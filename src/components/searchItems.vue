@@ -1,0 +1,139 @@
+<template>
+    <v-container fluid style="margin: 0;padding: 0;">
+      
+      <v-data-iterator :items="list" :items-per-page.sync="itemsPerPage" :page.sync="page" :search="search" :sort-by="sortBy"
+      :sort-desc="sortDesc" hide-default-footer>
+        <template v-slot:header>
+          <v-toolbar class="" color="#81D4FA" dark flat>
+            <v-text-field v-model="search" clearable flat solo-inverted hide-details prepend-inner-icon="mdi-magnify" label="검색"></v-text-field>
+          </v-toolbar>
+        </template>
+        <template v-slot:default="props">
+          <v-row class="mt-1">
+          <v-col cols="12" align="right">
+            <v-menu offset-y>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn style="height: 35px;font-size: 12px;" dark color="#81D4FA" class="ml-2 mr-2" v-bind="attrs" v-on="on" outlined>
+                {{ itemsPerPage }}개씩 보기
+                  <v-icon class="ml-2">mdi-chevron-down</v-icon>
+                </v-btn>
+              </template>
+              <v-list>
+                <v-list-item v-for="(number, index) in itemsPerPageArray" :key="index" @click="updateItemsPerPage(number)">
+                  <v-list-item-title>{{ number }}</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+            <v-btn-toggle v-model="sortBy" mandatory>
+              <v-btn style="border: none;height: 35px;font-size: 12px;" @click="sort" pressed :value="`rvCount`" outlined dark color="#000000">인기순</v-btn>
+              <v-btn style="border: none;height: 35px;font-size: 12px;" @click="sort" depressed :value="`price`" outlined dark color="#000000">가격순</v-btn>
+            </v-btn-toggle>
+            <span style="color:#464646;font-size:12px;margin:0 20px">전체 {{ list.length }} 개</span>
+          </v-col>
+          <!-- <v-select style="width: 100px;height: 50px;" v-model="sortBy" solo-inverted hide-details :items="keys" prepend-inner-icon="mdi-magnify" label="정렬"></v-select> -->
+        </v-row>
+          <v-row>
+            <v-col v-for="item in props.items" :key="item.title" cols="12" sm="6" md="4" lg="3" style="display: flex;">
+                <v-card @click="fnInfo(item)" class="py-2 px-2" height="470px" flat style="cursor: pointer;">
+            <div style="overflow: hidden;border-radius: 10px;"><v-img :src="item.url" height="300px" class="pointer"></v-img></div>
+            <div style="height: 90px;padding: 10px 0;" class="d-flex flex-column mb-6">
+              <p class="body-1" style="color: #464646; margin: 0;padding: 0;"><strong style="color:#868686;font-size: 12px;" >{{ item.brand  }}</strong></p>
+              <span class="body-1"><strong>{{ item.title  }}</strong></span>
+            </div>
+            <span class="body-3" style="font-size:12px;border-radius: 3px;background: #81D4FA;padding: 5px;color: #fff;">리뷰 {{ item.rvCount  }}개</span>
+            <p class="body-1" style="color: #464646; margin: 10px 0;padding-bottom: 50px;">{{ item.price | comma }}원</p>
+        </v-card>
+            </v-col>
+            <v-col cols="12" align="center" style="margin: 60px 0;">
+              <span class="mr-4 ml-4 ">전체 {{ numberOfPages }} 페이지
+          </span>
+          <v-btn dark color="#81D4FA" class="mr-1" @click="formerPage">
+            <v-icon>mdi-chevron-left</v-icon>
+          </v-btn>
+          <span class="mr-4 ml-4 "><strong>{{ page }} 페이지</strong>
+          </span>
+          <v-btn dark color="#81D4FA" class="ml-1" @click="nextPage">
+            <v-icon>mdi-chevron-right</v-icon>
+          </v-btn>
+            </v-col>
+          </v-row>
+        </template>
+      </v-data-iterator>
+    </v-container>
+  </template>
+
+<script>
+    import { oItemDB } from '@/assets/firebase'
+
+    export default {
+        firebase:{ oItems : oItemDB },
+        data() {
+            return {
+              itemsPerPageArray: [4, 8, 12],
+                itemsPerPage: 8,
+                historyList:[],
+                page: 1,
+                pageSize: 8,
+                listCount:0,
+                list:[],
+                oItems:[],
+                search: '',
+                dflag:false,
+                sortBy: 'rvCount',
+                sortDesc: true,
+                keys: [
+                  'title',
+                  'price',
+                  'rvCount',
+                ],
+            }
+        },
+        filters:{
+            comma(val){
+  	        return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+        },
+        methods:{
+            fnInfo(item){
+                this.$router.push({name:'item_view', params:{item:item, title:item.title}})
+            },
+            nextPage () {
+        if (this.page + 1 <= this.numberOfPages) this.page += 1
+      },
+      formerPage () {
+        if (this.page - 1 >= 1) this.page -= 1
+      },
+      updateItemsPerPage (number) {
+        this.itemsPerPage = number
+      },
+      sort(){
+        this.sortDesc = !this.sortDesc
+      }
+      
+        },
+        computed:{
+          numberOfPages () {
+        return Math.ceil(this.list.length / this.itemsPerPage)
+      },
+            
+        },
+        created(){
+         this.list = this.oItems
+        },
+    }
+</script>
+
+<style lang="scss" scoped>
+.py-2 {
+  transition: all 0.4s;
+  &:hover {
+    .body-1 {
+      text-decoration: underline;
+    }
+    .pointer {
+      transition: all 0.4s;
+      transform: scale(1.15);
+}
+  }
+}
+</style>
